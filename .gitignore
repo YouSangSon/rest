@@ -37,6 +37,5 @@ out/
 .vscode/
 
 ### ETC ###
-push_repositry.sh
 src/main/resources/application.properties
 config.json

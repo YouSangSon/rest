@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'com.google.cloud.tools.jib' version '3.4.1'
 }
 
 group = 'yousang.backend'
@@ -22,8 +23,29 @@ repositories {
     mavenCentral()
 }
 
-ext {
-    set('snippetsDir', file("build/generated-snippets"))
+def jsonFile = file('config.json')
+def parsedJson = new groovy.json.JsonSlurper().parseText(jsonFile.text)
+
+def parseImage = parsedJson.get('base_path') + '/' + parsedJson.get('rest_tag') ?: parsedJson.get('base_path') + '/' + parsedJson.get('default_rest_tag')
+def parseAllowInsecureRegistries = parsedJson.get('allow_insecure_registries') ?: false
+
+jib {
+    from {
+        image = 'openjdk:21-slim'
+        platforms {
+            platform{
+                os = 'linux'
+                architecture = 'amd64'
+            }
+        }
+    }
+    to {
+        image = parseImage
+    }
+    
+    container {
+        allowInsecureRegistries = parseAllowInsecureRegistries  // **Not recommended for production**
+    }
 }
 
 dependencies {
@@ -47,12 +69,12 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.17.2'
 }
 
-tasks.named('test') {
-    outputs.dir snippetsDir
-    useJUnitPlatform()
-}
+// tasks.named('test') {
+//     outputs.dir snippetsDir
+//     useJUnitPlatform()
+// }
 
-tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
-}
+// tasks.named('asciidoctor') {
+//     inputs.dir snippetsDir
+//     dependsOn test
+// }

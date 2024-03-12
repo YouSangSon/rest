@@ -36,7 +36,9 @@ public class LottoService {
     private final AnnuityLottoPredictRepository annuityLottoPredictRepository;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public LottoService(LottoRepository lottoRepository, LottoPredictRepository lottoPredictRepository, AnnuityLottoRepository annuityLottoRepository, AnnuityLottoPredictRepository annuityLottoPredictRepository) {
+    public LottoService(LottoRepository lottoRepository, LottoPredictRepository lottoPredictRepository,
+            AnnuityLottoRepository annuityLottoRepository,
+            AnnuityLottoPredictRepository annuityLottoPredictRepository) {
         this.lottoRepository = lottoRepository;
         this.lottoPredictRepository = lottoPredictRepository;
         this.annuityLottoRepository = annuityLottoRepository;
@@ -193,7 +195,8 @@ public class LottoService {
 
     public ApiResponse getPredictAnnuityLottoNumber(int drwNo) {
         try {
-            List<PredictAnnuityLottoResult> annuityLottoPredictResult = annuityLottoPredictRepository.findAllByPredictDrwNo(drwNo);
+            List<PredictAnnuityLottoResult> annuityLottoPredictResult = annuityLottoPredictRepository
+                    .findAllByPredictDrwNo(drwNo);
             return new ApiResponse(HttpStatus.OK.value(), "Success",
                     ConvertService.predictAnnuityLottoFromEntityToDTO(annuityLottoPredictResult));
         } catch (Exception e) {
