@@ -6,13 +6,43 @@ import yousang.backend.rest.dto.lotto.LottoDTO;
 import yousang.backend.rest.dto.lotto.PredictLottoDTO;
 import yousang.backend.rest.entity.lotto.AnnuityLottoResult;
 import yousang.backend.rest.entity.lotto.PredictLottoResult;
+import yousang.backend.rest.repository.lotto.LottoPredictRepository;
+import yousang.backend.rest.repository.lotto.LottoRepository;
 import yousang.backend.rest.entity.lotto.LottoResult;
 import yousang.backend.rest.entity.lotto.PredictAnnuityLottoResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConvertService {
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Getter
+public class LottoUtilService {
+    private final LottoRepository lottoRepository;
+    private final LottoPredictRepository lottoPredictRepository;
+
+    public LottoUtilService(LottoRepository lottoRepository, LottoPredictRepository lottoPredictRepository) {
+        this.lottoRepository = lottoRepository;
+        this.lottoPredictRepository = lottoPredictRepository;
+    }
+
+    public int getLottoLatestDrwNo(String mode) {
+        try {
+            if (mode == "annuity") {
+                PredictLottoResult result = lottoPredictRepository.findTopByOrderByPredictDrwNoDesc().orElse(null);
+                return result != null ? result.getPredictDrwNo() + 1 : 0;
+            } else if (mode == "lotto") {
+                LottoResult result = lottoRepository.findTopByOrderByDrwNoDesc().orElse(null);
+                return result != null ? result.getDrwNo() + 1 : 0;
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+        return 0;
+    }
+
     public static LottoDTO lottoFromEntityToDTO(LottoResult lottoResult) {
         return new LottoDTO(
                 lottoResult.getDrwNo(),
@@ -69,7 +99,8 @@ public class ConvertService {
                 annuityLottoResult.getBonusNo6());
     }
 
-    public static List<PredictAnnuityLottoDTO> predictAnnuityLottoFromEntityToDTO(List<PredictAnnuityLottoResult> predictAnnuityLottoResults) {
+    public static List<PredictAnnuityLottoDTO> predictAnnuityLottoFromEntityToDTO(
+            List<PredictAnnuityLottoResult> predictAnnuityLottoResults) {
 
         List<PredictAnnuityLottoDTO> predictAnnuityLottoNumberResults = new ArrayList<>();
 
@@ -83,8 +114,7 @@ public class ConvertService {
                     predictAnnuityLottoResult.getDrwtNo5(),
                     predictAnnuityLottoResult.getDrwtNo6(),
                     predictAnnuityLottoResult.getPredictPer(),
-                    predictAnnuityLottoResult.getPredictEpoch()
-            );
+                    predictAnnuityLottoResult.getPredictEpoch());
             predictAnnuityLottoNumberResults.add(predictAnnuityLottoNumberResult);
         }
 

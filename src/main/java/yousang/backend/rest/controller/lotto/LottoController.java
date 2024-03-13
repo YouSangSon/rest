@@ -5,15 +5,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import yousang.backend.rest.response.ApiResponse;
 import yousang.backend.rest.service.lotto.LottoService;
+import yousang.backend.rest.service.lotto.LottoUtilService;
 
 @RestController
 @RequestMapping("/lotto")
 @Slf4j
 public class LottoController {
     private final LottoService lottoService;
+    private final LottoUtilService lottoUtilService;
 
-    public LottoController(LottoService lottoService) {
+    public LottoController(LottoService lottoService, LottoUtilService lottoUtilService) {
         this.lottoService = lottoService;
+        this.lottoUtilService = lottoUtilService;
     }
 
     @GetMapping("/lotto-number/")
@@ -24,7 +27,7 @@ public class LottoController {
 
     @PutMapping("/lotto-number/")
     public ResponseEntity<ApiResponse> putLottoNumber() {
-        int latestDrwNo = lottoService.getLottoLatestDrwNo("lotto");
+        int latestDrwNo = lottoUtilService.getLottoLatestDrwNo("lotto");
         log.info("latestDrwNo: " + latestDrwNo);
         ApiResponse response = lottoService.putLottoNumber(latestDrwNo);
         return ResponseEntity.ok(response);
@@ -33,25 +36,6 @@ public class LottoController {
     @GetMapping("/predict-lotto-number/")
     public ResponseEntity<ApiResponse> getPredictLottoNumber(@RequestParam int number) {
         ApiResponse response = lottoService.getPredictLottoNumber(number);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/annuity-lotto-number/")
-    public ResponseEntity<ApiResponse> getAnnuityLottoNumber(@RequestParam int number) {
-        ApiResponse response = lottoService.getAnnuityLottoNumber(number);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/annuity-lotto-number/")
-    public ResponseEntity<ApiResponse> putAnnuityLottoNumber() {
-        int latestDrwNo = lottoService.getLottoLatestDrwNo("annuity");
-        ApiResponse response = lottoService.putAnnuityLottoNumber(latestDrwNo);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/predict-annuity-lotto-number/")
-    public ResponseEntity<ApiResponse> getPredictAnnuityLottoNumber(@RequestParam int number) {
-        ApiResponse response = lottoService.getPredictAnnuityLottoNumber(number);
         return ResponseEntity.ok(response);
     }
 }
