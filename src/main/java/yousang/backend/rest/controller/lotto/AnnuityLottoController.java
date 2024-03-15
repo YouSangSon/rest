@@ -43,4 +43,10 @@ public class AnnuityLottoController {
         ApiResponse response = annuityLottoService.getPredictAnnuityLottoNumber(number);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/compare-annuity-lotto-number/")
+    public ResponseEntity<ApiResponse> compareAnnuityLottoNumber() {
+        ApiResponse response = annuityLottoService.compareAnnuityLottoWinNumber();
+        return ResponseEntity.ok(response);
+    }
 }

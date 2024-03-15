@@ -38,4 +38,10 @@ public class LottoController {
         ApiResponse response = lottoService.getPredictLottoNumber(number);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/compare-lotto-number/")
+    public ResponseEntity<ApiResponse> compareLottoNumber() {
+        ApiResponse response = lottoService.compareLottoWinNumber();
+        return ResponseEntity.ok(response);
+    }
 }

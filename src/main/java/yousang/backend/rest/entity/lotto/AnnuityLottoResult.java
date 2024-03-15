@@ -1,7 +1,9 @@
 package yousang.backend.rest.entity.lotto;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import yousang.backend.rest.dto.lotto.AnnuityLottoDTO;
 
@@ -11,6 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "annuity_lotto_results")
 public class AnnuityLottoResult {
     @Id

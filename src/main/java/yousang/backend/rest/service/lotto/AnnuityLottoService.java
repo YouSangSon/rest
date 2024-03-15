@@ -1,25 +1,24 @@
 package yousang.backend.rest.service.lotto;
 
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
 import yousang.backend.rest.entity.lotto.AnnuityLottoResult;
 import yousang.backend.rest.entity.lotto.PredictAnnuityLottoResult;
 import yousang.backend.rest.repository.lotto.AnnuityLottoPredictRepository;
 import yousang.backend.rest.repository.lotto.AnnuityLottoRepository;
 import yousang.backend.rest.response.ApiResponse;
+
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -27,8 +26,7 @@ public class AnnuityLottoService {
     private final AnnuityLottoRepository annuityLottoRepository;
     private final AnnuityLottoPredictRepository annuityLottoPredictRepository;
 
-    public AnnuityLottoService(AnnuityLottoRepository annuityLottoRepository,
-            AnnuityLottoPredictRepository annuityLottoPredictRepository) {
+    public AnnuityLottoService(AnnuityLottoRepository annuityLottoRepository, AnnuityLottoPredictRepository annuityLottoPredictRepository) {
         this.annuityLottoRepository = annuityLottoRepository;
         this.annuityLottoPredictRepository = annuityLottoPredictRepository;
     }
@@ -36,8 +34,8 @@ public class AnnuityLottoService {
     public ApiResponse getAnnuityLottoNumber(int drwNo) {
         try {
             Optional<AnnuityLottoResult> annuityLottoResult = annuityLottoRepository.findByDrwNo(drwNo);
-            return new ApiResponse(HttpStatus.OK.value(), "Success",
-                    LottoUtilService.annuitylottoFromEntityToDTO(annuityLottoResult.get()));
+            return annuityLottoResult.map(lottoResult -> new ApiResponse(HttpStatus.OK.value(), "Success",
+                    LottoUtilService.annuityLottoFromEntityToDTO(lottoResult))).orElseGet(() -> new ApiResponse(HttpStatus.NOT_FOUND.value(), "Not Found"));
         } catch (Exception e) {
             return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error: " + e.getMessage());
         }
@@ -50,10 +48,11 @@ public class AnnuityLottoService {
 
             Element winResultTag = response.selectFirst("div.win_result");
 
-            String roundNumText = winResultTag.selectFirst("strong").text().replace("|", "").replace("회", "");
-            Integer roundNum = Integer.parseInt(roundNumText);
+            assert winResultTag != null;
+            String roundNumText = Objects.requireNonNull(winResultTag.selectFirst("strong")).text().replace("|", "").replace("회", "");
+            int roundNum = Integer.parseInt(roundNumText);
 
-            String drawDateText = winResultTag.selectFirst("p.desc").text();
+            String drawDateText = Objects.requireNonNull(winResultTag.selectFirst("p.desc")).text();
             String cleanedDateText = drawDateText.replace("년", "-")
                     .replace("월", "-")
                     .replace("일 추첨", "")
@@ -67,12 +66,13 @@ public class AnnuityLottoService {
 
             Elements win720NumTags = winResultTag.select("div.win720_num");
 
-            Element divGroup = win720NumTags.get(0).selectFirst("div.group");
-            Integer numGroup = Integer.parseInt(divGroup.select("span").get(1).text());
+            Element divGroup = win720NumTags.getFirst().selectFirst("div.group");
+            assert divGroup != null;
+            int numGroup = Integer.parseInt(divGroup.select("span").get(1).text());
 
             List<Integer> win720Nums = new ArrayList<>();
             for (int i = 1; i <= 6; i++) {
-                Element numElement = win720NumTags.get(0).selectFirst("span.num.al720_color" + i + ".large span");
+                Element numElement = win720NumTags.getFirst().selectFirst("span.num.al720_color" + i + ".large span");
                 if (numElement != null) {
                     Integer num = Integer.parseInt(numElement.text());
                     win720Nums.add(num);
@@ -115,12 +115,93 @@ public class AnnuityLottoService {
 
     public ApiResponse getPredictAnnuityLottoNumber(int drwNo) {
         try {
-            List<PredictAnnuityLottoResult> predictAnnuityLottoResult = annuityLottoPredictRepository
-                    .findAllByPredictDrwNo(drwNo);
+            List<PredictAnnuityLottoResult> predictAnnuityLottoResult = annuityLottoPredictRepository.findAllByPredictDrwNo(drwNo);
             return new ApiResponse(HttpStatus.OK.value(), "Success",
                     LottoUtilService.predictAnnuityLottoFromEntityToDTO(predictAnnuityLottoResult));
         } catch (Exception e) {
             return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error: " + e.getMessage(), null);
         }
+    }
+
+    public ApiResponse compareAnnuityLottoWinNumber() {
+        try {
+            List<PredictAnnuityLottoResult> predictAnnuityLottoResults = AnnuityLottoPredictRepository.findAllByPredictPerIsNull();
+
+            if (!predictAnnuityLottoResults.isEmpty()) {
+                Set<Integer> drwNos = new HashSet<>();
+
+                for (PredictAnnuityLottoResult predictAnnuityLottoResult : predictAnnuityLottoResults) {
+                    drwNos.add(predictAnnuityLottoResult.getPredictDrwNo());
+                }
+
+                List<AnnuityLottoResult> annuityLottoResults = annuityLottoRepository.findAllByDrwNoIn(drwNos);
+
+                for (PredictAnnuityLottoResult predictAnnuityLottoResult : predictAnnuityLottoResults) {
+                    for (AnnuityLottoResult annuityLottoResult : annuityLottoResults) {
+                        if (predictAnnuityLottoResult.getPredictDrwNo() == annuityLottoResult.getDrwNo()) {
+                            Set<Integer> annuityPredictNumbers = getIntegers(predictAnnuityLottoResult);
+                            Set<Integer> annuityNumbers = Set.of(
+                                    annuityLottoResult.getDrwtNo1(),
+                                    annuityLottoResult.getDrwtNo2(),
+                                    annuityLottoResult.getDrwtNo3(),
+                                    annuityLottoResult.getDrwtNo4(),
+                                    annuityLottoResult.getDrwtNo5(),
+                                    annuityLottoResult.getDrwtNo6()
+                            );
+
+                            Set<Integer> matchingNumbers = annuityNumbers.stream().filter(annuityPredictNumbers::contains).collect(Collectors.toSet());
+
+                            double predictPer = (double) matchingNumbers.size() / 6 * 100;
+
+                            PredictAnnuityLottoResult newPredictAnnuityLottoResult = new PredictAnnuityLottoResult();
+
+                            newPredictAnnuityLottoResult.setPredictDrwNo(predictAnnuityLottoResult.getPredictDrwNo());
+                            newPredictAnnuityLottoResult.setDrwtNo1(predictAnnuityLottoResult.getDrwtNo1());
+                            newPredictAnnuityLottoResult.setDrwtNo2(predictAnnuityLottoResult.getDrwtNo2());
+                            newPredictAnnuityLottoResult.setDrwtNo3(predictAnnuityLottoResult.getDrwtNo3());
+                            newPredictAnnuityLottoResult.setDrwtNo4(predictAnnuityLottoResult.getDrwtNo4());
+                            newPredictAnnuityLottoResult.setDrwtNo5(predictAnnuityLottoResult.getDrwtNo5());
+                            newPredictAnnuityLottoResult.setDrwtNo6(predictAnnuityLottoResult.getDrwtNo6());
+                            newPredictAnnuityLottoResult.setPredictPer(predictAnnuityLottoResult.getPredictPer());
+                            newPredictAnnuityLottoResult.setPredictPer(BigDecimal.valueOf(predictPer));
+
+                            annuityLottoPredictRepository.save(newPredictAnnuityLottoResult);
+                        }
+                    }
+                }
+            }
+            return new ApiResponse(HttpStatus.OK.value(), "Success");
+        } catch (Exception e) {
+            log.error("Error: " + e.getMessage());
+            return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error", null);
+        }
+    }
+
+    private static Set<Integer> getIntegers(PredictAnnuityLottoResult predictAnnuityLottoResult) {
+        Set<Integer> annuityLottoPredictNumbers;
+        if (predictAnnuityLottoResult.getPredictEpoch() != null) {
+            annuityLottoPredictNumbers = Set.of(
+                    predictAnnuityLottoResult.getId().intValue(),
+                    predictAnnuityLottoResult.getDrwtNo1(),
+                    predictAnnuityLottoResult.getDrwtNo2(),
+                    predictAnnuityLottoResult.getDrwtNo3(),
+                    predictAnnuityLottoResult.getDrwtNo4(),
+                    predictAnnuityLottoResult.getDrwtNo5(),
+                    predictAnnuityLottoResult.getDrwtNo6(),
+                    predictAnnuityLottoResult.getPredictEpoch().intValue()
+            );
+        } else {
+            annuityLottoPredictNumbers = Set.of(
+                    predictAnnuityLottoResult.getId().intValue(),
+                    predictAnnuityLottoResult.getDrwtNo1(),
+                    predictAnnuityLottoResult.getDrwtNo2(),
+                    predictAnnuityLottoResult.getDrwtNo3(),
+                    predictAnnuityLottoResult.getDrwtNo4(),
+                    predictAnnuityLottoResult.getDrwtNo5(),
+                    predictAnnuityLottoResult.getDrwtNo6(),
+                    0
+            );
+        }
+        return annuityLottoPredictNumbers;
     }
 }

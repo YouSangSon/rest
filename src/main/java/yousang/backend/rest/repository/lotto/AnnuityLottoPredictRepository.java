@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface AnnuityLottoPredictRepository extends JpaRepository<PredictAnnuityLottoResult, Long> {
     List<PredictAnnuityLottoResult> findAllByPredictDrwNo(int predictDrwNo);
 
-    List<PredictAnnuityLottoResult> findAllByPredictPerIsNull();
+    static List<PredictAnnuityLottoResult> findAllByPredictPerIsNull();
 
     Optional<PredictAnnuityLottoResult> findTopByOrderByPredictDrwNoDesc();
 }
