@@ -24,13 +24,13 @@ public class AnnuityLottoController {
         this.lottoUtilService = lottoUtilService;
     }
 
-    @GetMapping("/annuity-lotto-number/")
+    @GetMapping("/lotto-number/")
     public ResponseEntity<ApiResponse> getAnnuityLottoNumber(@RequestParam int number) {
         ApiResponse response = annuityLottoService.getAnnuityLottoNumber(number);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/annuity-lotto-number/")
+    @PutMapping("/lotto-number/")
     public ResponseEntity<ApiResponse> putAnnuityLottoNumber() {
         int latestDrwNo = lottoUtilService.getLottoLatestDrwNo("annuity");
         log.info("latestDrwNo: " + latestDrwNo);
@@ -38,13 +38,13 @@ public class AnnuityLottoController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/predict-annuity-lotto-number/")
+    @GetMapping("/predict-lotto-number/")
     public ResponseEntity<ApiResponse> getPredictAnnuityLottoNumber(@RequestParam int number) {
         ApiResponse response = annuityLottoService.getPredictAnnuityLottoNumber(number);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/compare-annuity-lotto-number/")
+    @PutMapping("/compare-lotto-number/")
     public ResponseEntity<ApiResponse> compareAnnuityLottoNumber() {
         ApiResponse response = annuityLottoService.compareAnnuityLottoWinNumber();
         return ResponseEntity.ok(response);

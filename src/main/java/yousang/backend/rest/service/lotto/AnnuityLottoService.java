@@ -125,7 +125,7 @@ public class AnnuityLottoService {
 
     public ApiResponse compareAnnuityLottoWinNumber() {
         try {
-            List<PredictAnnuityLottoResult> predictAnnuityLottoResults = AnnuityLottoPredictRepository.findAllByPredictPerIsNull();
+            List<PredictAnnuityLottoResult> predictAnnuityLottoResults = annuityLottoPredictRepository.findAllByPredictPerIsNull();
 
             if (!predictAnnuityLottoResults.isEmpty()) {
                 Set<Integer> drwNos = new HashSet<>();
@@ -139,8 +139,8 @@ public class AnnuityLottoService {
                 for (PredictAnnuityLottoResult predictAnnuityLottoResult : predictAnnuityLottoResults) {
                     for (AnnuityLottoResult annuityLottoResult : annuityLottoResults) {
                         if (predictAnnuityLottoResult.getPredictDrwNo() == annuityLottoResult.getDrwNo()) {
-                            Set<Integer> annuityPredictNumbers = getIntegers(predictAnnuityLottoResult);
-                            Set<Integer> annuityNumbers = Set.of(
+                            List<Integer> annuityPredictNumbers = getIntegers(predictAnnuityLottoResult);
+                            List<Integer> annuityNumbers = List.of(
                                     annuityLottoResult.getDrwtNo1(),
                                     annuityLottoResult.getDrwtNo2(),
                                     annuityLottoResult.getDrwtNo3(),
@@ -153,17 +153,18 @@ public class AnnuityLottoService {
 
                             double predictPer = (double) matchingNumbers.size() / 6 * 100;
 
-                            PredictAnnuityLottoResult newPredictAnnuityLottoResult = new PredictAnnuityLottoResult();
-
-                            newPredictAnnuityLottoResult.setPredictDrwNo(predictAnnuityLottoResult.getPredictDrwNo());
-                            newPredictAnnuityLottoResult.setDrwtNo1(predictAnnuityLottoResult.getDrwtNo1());
-                            newPredictAnnuityLottoResult.setDrwtNo2(predictAnnuityLottoResult.getDrwtNo2());
-                            newPredictAnnuityLottoResult.setDrwtNo3(predictAnnuityLottoResult.getDrwtNo3());
-                            newPredictAnnuityLottoResult.setDrwtNo4(predictAnnuityLottoResult.getDrwtNo4());
-                            newPredictAnnuityLottoResult.setDrwtNo5(predictAnnuityLottoResult.getDrwtNo5());
-                            newPredictAnnuityLottoResult.setDrwtNo6(predictAnnuityLottoResult.getDrwtNo6());
-                            newPredictAnnuityLottoResult.setPredictPer(predictAnnuityLottoResult.getPredictPer());
-                            newPredictAnnuityLottoResult.setPredictPer(BigDecimal.valueOf(predictPer));
+                            PredictAnnuityLottoResult newPredictAnnuityLottoResult = PredictAnnuityLottoResult.builder()
+                                    .id(predictAnnuityLottoResult.getId())
+                                    .predictDrwNo(predictAnnuityLottoResult.getPredictDrwNo())
+                                    .drwtNo1(predictAnnuityLottoResult.getDrwtNo1())
+                                    .drwtNo2(predictAnnuityLottoResult.getDrwtNo2())
+                                    .drwtNo3(predictAnnuityLottoResult.getDrwtNo3())
+                                    .drwtNo4(predictAnnuityLottoResult.getDrwtNo4())
+                                    .drwtNo5(predictAnnuityLottoResult.getDrwtNo5())
+                                    .drwtNo6(predictAnnuityLottoResult.getDrwtNo6())
+                                    .predictPer(BigDecimal.valueOf(predictPer))
+                                    .predictEpoch(predictAnnuityLottoResult.getPredictEpoch())
+                                    .build();
 
                             annuityLottoPredictRepository.save(newPredictAnnuityLottoResult);
                         }
@@ -177,10 +178,10 @@ public class AnnuityLottoService {
         }
     }
 
-    private static Set<Integer> getIntegers(PredictAnnuityLottoResult predictAnnuityLottoResult) {
-        Set<Integer> annuityLottoPredictNumbers;
+    private static List<Integer> getIntegers(PredictAnnuityLottoResult predictAnnuityLottoResult) {
+        List<Integer> annuityLottoPredictNumbers;
         if (predictAnnuityLottoResult.getPredictEpoch() != null) {
-            annuityLottoPredictNumbers = Set.of(
+            annuityLottoPredictNumbers = List.of(
                     predictAnnuityLottoResult.getId().intValue(),
                     predictAnnuityLottoResult.getDrwtNo1(),
                     predictAnnuityLottoResult.getDrwtNo2(),
@@ -191,7 +192,7 @@ public class AnnuityLottoService {
                     predictAnnuityLottoResult.getPredictEpoch().intValue()
             );
         } else {
-            annuityLottoPredictNumbers = Set.of(
+            annuityLottoPredictNumbers = List.of(
                     predictAnnuityLottoResult.getId().intValue(),
                     predictAnnuityLottoResult.getDrwtNo1(),
                     predictAnnuityLottoResult.getDrwtNo2(),

@@ -108,17 +108,18 @@ public class LottoService {
 
                             double predictPer = (double) matchingNumbers.size() / 6 * 100;
 
-                            PredictLottoResult newPredictLottoResult = new PredictLottoResult();
-
-                            newPredictLottoResult.setPredictDrwNo(predictLottoResult.getPredictDrwNo());
-                            newPredictLottoResult.setDrwtNo1(predictLottoResult.getDrwtNo1());
-                            newPredictLottoResult.setDrwtNo2(predictLottoResult.getDrwtNo2());
-                            newPredictLottoResult.setDrwtNo3(predictLottoResult.getDrwtNo3());
-                            newPredictLottoResult.setDrwtNo4(predictLottoResult.getDrwtNo4());
-                            newPredictLottoResult.setDrwtNo5(predictLottoResult.getDrwtNo5());
-                            newPredictLottoResult.setDrwtNo6(predictLottoResult.getDrwtNo6());
-                            newPredictLottoResult.setPredictPer(predictLottoResult.getPredictPer());
-                            newPredictLottoResult.setPredictPer(BigDecimal.valueOf(predictPer));
+                            PredictLottoResult newPredictLottoResult = PredictLottoResult.builder()
+                                    .id(predictLottoResult.getId())
+                                    .predictDrwNo(predictLottoResult.getPredictDrwNo())
+                                    .drwtNo1(predictLottoResult.getDrwtNo1())
+                                    .drwtNo2(predictLottoResult.getDrwtNo2())
+                                    .drwtNo3(predictLottoResult.getDrwtNo3())
+                                    .drwtNo4(predictLottoResult.getDrwtNo4())
+                                    .drwtNo5(predictLottoResult.getDrwtNo5())
+                                    .drwtNo6(predictLottoResult.getDrwtNo6())
+                                    .predictPer(BigDecimal.valueOf(predictPer))
+                                    .predictEpoch(predictLottoResult.getPredictEpoch())
+                                    .build();
 
                             lottoPredictRepository.save(newPredictLottoResult);
                         }
