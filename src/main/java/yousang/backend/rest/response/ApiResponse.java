@@ -1,5 +1,6 @@
 package yousang.backend.rest.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter

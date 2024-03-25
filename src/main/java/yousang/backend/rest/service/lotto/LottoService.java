@@ -30,7 +30,8 @@ public class LottoService {
         try {
             Optional<LottoResult> lottoResult = lottoRepository.findByDrwNo(drwNo);
             return lottoResult.map(result -> new ApiResponse(HttpStatus.OK.value(), "Success",
-                    LottoUtilService.lottoFromEntityToDTO(result))).orElseGet(() -> new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid drwNo", null));
+                    LottoUtilService.lottoFromEntityToDTO(result)))
+                    .orElseGet(() -> new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid drwNo", null));
         } catch (Exception e) {
             return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error: " + e.getMessage());
         }
@@ -101,10 +102,10 @@ public class LottoService {
                                     lottoResult.getDrwtNo3(),
                                     lottoResult.getDrwtNo4(),
                                     lottoResult.getDrwtNo5(),
-                                    lottoResult.getDrwtNo6()
-                            );
+                                    lottoResult.getDrwtNo6());
 
-                            Set<Integer> matchingNumbers = lottoNumbers.stream().filter(lottoPredictNumbers::contains).collect(Collectors.toSet());
+                            Set<Integer> matchingNumbers = lottoNumbers.stream().filter(lottoPredictNumbers::contains)
+                                    .collect(Collectors.toSet());
 
                             double predictPer = (double) matchingNumbers.size() / 6 * 100;
 
@@ -121,7 +122,9 @@ public class LottoService {
                                     .predictEpoch(predictLottoResult.getPredictEpoch())
                                     .build();
 
-                            lottoPredictRepository.save(newPredictLottoResult);
+                            if (newPredictLottoResult != null) {
+                                lottoPredictRepository.save(newPredictLottoResult);
+                            }
                         }
                     }
                 }
@@ -144,8 +147,7 @@ public class LottoService {
                     predictLottoResult.getDrwtNo4(),
                     predictLottoResult.getDrwtNo5(),
                     predictLottoResult.getDrwtNo6(),
-                    predictLottoResult.getPredictEpoch().intValue()
-            );
+                    predictLottoResult.getPredictEpoch().intValue());
         } else {
             lottoPredictNumbers = Set.of(
                     predictLottoResult.getId().intValue(),
@@ -155,8 +157,7 @@ public class LottoService {
                     predictLottoResult.getDrwtNo4(),
                     predictLottoResult.getDrwtNo5(),
                     predictLottoResult.getDrwtNo6(),
-                    0
-            );
+                    0);
         }
         return lottoPredictNumbers;
     }

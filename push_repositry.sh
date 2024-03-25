@@ -1,11 +1,12 @@
 #!/bin/bash
 
-file_path="config.json"
-loacl_repository=$(jq -r '.repository' "$file_path")
+file_path="buildConfig.json"
+local_repository=$(jq -r '.base_path' "$file_path")
 
 echo "Choice to delete rest-server tag in Local Docker Repository (tag name / n)"
-curl $loacl_repository/v2/rest/tags/list
-read deleteTag
+curl $local_repository/v2/rest/tags/list
+read -p "Enter version to deleteTag[tag name / n]:"
+if [ -n "$REPLY" ]; then deleteTag="${REPLY}"; fi
 
 case $deleteTag in
 n | No | N)
@@ -18,8 +19,8 @@ n | No | N)
     ;;
 esac
 
-echo "Please enter the image tag:"
-read tag
+read -p "Please enter the image tag:"
+if [ -n "$REPLY" ]; then tag="${REPLY}"; fi
 
 echo "Pushing to Local Docker Repository..."
 ./gradlew jib -PjibTag=$tag
